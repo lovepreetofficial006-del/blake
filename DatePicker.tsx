@@ -191,38 +191,86 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       return false
     }
 
-    // If custom period is not set, return false
-    if (!customPeriod) {
-      return false
-    }
-
-    const baseDate = startDate || endDate || new Date()
-    const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
-
-    switch (customPeriod) {
-      case "day":
-        // Select every nth day based on customInterval
-        return daysDiff % customInterval === 0
-
-      case "week":
-        // Select every nth week based on customInterval
+    // Check if setCustomPeriod is "custom"
+    if (recurringFrequency === "Custom") {
+      // If customPeriod is "week", select every weekly day
+      if (customPeriod === "week") {
+        const baseDate = startDate || endDate || new Date()
+        const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
         const weeksDiff = Math.floor(daysDiff / 7)
-        return weeksDiff % customInterval === 0
+        
+        // If customInterval is 1, select every week
+        if (customInterval === 1) {
+          return weeksDiff % 1 === 0
+        }
+        // If customInterval is 2, select one week, skip one, then select next
+        else if (customInterval === 2) {
+          return weeksDiff % 2 === 0
+        }
+        // If customInterval is 3, 4, 5, etc., skip accordingly
+        else {
+          return weeksDiff % customInterval === 0
+        }
+      }
+      
+      // If customPeriod is "day", "month", "year", select based on customPeriod
+      else if (["day", "month", "year"].includes(customPeriod)) {
+        const baseDate = startDate || endDate || new Date()
+        const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
 
-      case "month":
-        // Select every nth month based on customInterval
-        const monthsDiff = (date.getFullYear() - baseDate.getFullYear()) * 12 + 
-                          (date.getMonth() - baseDate.getMonth())
-        return monthsDiff % customInterval === 0
+        switch (customPeriod) {
+          case "day":
+            // If customInterval is 1, select every day
+            if (customInterval === 1) {
+              return daysDiff % 1 === 0
+            }
+            // If customInterval is 2, select one day, skip one, then select next
+            else if (customInterval === 2) {
+              return daysDiff % 2 === 0
+            }
+            // If customInterval is 3, 4, 5, etc., skip accordingly
+            else {
+              return daysDiff % customInterval === 0
+            }
 
-      case "year":
-        // Select every nth year based on customInterval
-        const yearsDiff = date.getFullYear() - baseDate.getFullYear()
-        return yearsDiff % customInterval === 0
+          case "month":
+            const monthsDiff = (date.getFullYear() - baseDate.getFullYear()) * 12 + 
+                              (date.getMonth() - baseDate.getMonth())
+            // If customInterval is 1, select every month
+            if (customInterval === 1) {
+              return monthsDiff % 1 === 0
+            }
+            // If customInterval is 2, select one month, skip one, then select next
+            else if (customInterval === 2) {
+              return monthsDiff % 2 === 0
+            }
+            // If customInterval is 3, 4, 5, etc., skip accordingly
+            else {
+              return monthsDiff % customInterval === 0
+            }
 
-      default:
-        return false
+          case "year":
+            const yearsDiff = date.getFullYear() - baseDate.getFullYear()
+            // If customInterval is 1, select every year
+            if (customInterval === 1) {
+              return yearsDiff % 1 === 0
+            }
+            // If customInterval is 2, select one year, skip one, then select next
+            else if (customInterval === 2) {
+              return yearsDiff % 2 === 0
+            }
+            // If customInterval is 3, 4, 5, etc., skip accordingly
+            else {
+              return yearsDiff % customInterval === 0
+            }
+
+          default:
+            return false
+        }
+      }
     }
+
+    return false
   }
 
   // Function to check if a date should be skipped based on custom interval
@@ -231,37 +279,42 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       return false
     }
 
-    if (customInterval <= 1) {
-      return false
-    }
-
-    const baseDate = startDate || endDate || new Date()
-    const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
-
-    switch (customPeriod) {
-      case "day":
-        // Skip days that don't match the interval pattern
-        return daysDiff % customInterval !== 0
-
-      case "week":
-        // Skip weeks that don't match the interval pattern
-        const weeksDiff = Math.floor(daysDiff / 7)
-        return weeksDiff % customInterval !== 0
-
-      case "month":
-        // Skip months that don't match the interval pattern
-        const monthsDiff = (date.getFullYear() - baseDate.getFullYear()) * 12 + 
-                          (date.getMonth() - baseDate.getMonth())
-        return monthsDiff % customInterval !== 0
-
-      case "year":
-        // Skip years that don't match the interval pattern
-        const yearsDiff = date.getFullYear() - baseDate.getFullYear()
-        return yearsDiff % customInterval !== 0
-
-      default:
+    // Only apply skipping logic when setCustomPeriod is "custom"
+    if (recurringFrequency === "Custom") {
+      if (customInterval <= 1) {
         return false
+      }
+
+      const baseDate = startDate || endDate || new Date()
+      const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      switch (customPeriod) {
+        case "day":
+          // Skip days that don't match the interval pattern
+          return daysDiff % customInterval !== 0
+
+        case "week":
+          // Skip weeks that don't match the interval pattern
+          const weeksDiff = Math.floor(daysDiff / 7)
+          return weeksDiff % customInterval !== 0
+
+        case "month":
+          // Skip months that don't match the interval pattern
+          const monthsDiff = (date.getFullYear() - baseDate.getFullYear()) * 12 + 
+                            (date.getMonth() - baseDate.getMonth())
+          return monthsDiff % customInterval !== 0
+
+        case "year":
+          // Skip years that don't match the interval pattern
+          const yearsDiff = date.getFullYear() - baseDate.getFullYear()
+          return yearsDiff % customInterval !== 0
+
+        default:
+          return false
+      }
     }
+
+    return false
   }
 
   const handleDateSelection = (day: number, month: number, year: number) => {
