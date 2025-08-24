@@ -75,6 +75,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const [customInterval, setCustomInterval] = useState(1)
   const [customPeriod, setCustomPeriod] = useState("week")
+  const [isCustomMode, setIsCustomMode] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [skipWeekends, setSkipWeekends] = useState(false)
   const [monthlyOption, setMonthlyOption] = useState("Same day each month")
@@ -83,6 +84,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   console.log("skipWeekends", skipWeekends)
   console.log("monthlyOption", monthlyOption)
   console.log("customPeriod", customPeriod)
+  console.log("isCustomMode", isCustomMode)
+  console.log("recurringFrequency", recurringFrequency)
 
   const today = new Date()
 
@@ -122,6 +125,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   useEffect(() => {
     setLocalEndTime(endTime)
   }, [endTime])
+
+  // Set custom mode when recurringFrequency is "Custom"
+  useEffect(() => {
+    if (recurringFrequency === "Custom") {
+      setIsCustomMode(true)
+    } else {
+      setIsCustomMode(false)
+    }
+  }, [recurringFrequency])
 
   function formatDateInputValue(date: Date | null): string {
     if (!date) return ""
@@ -191,11 +203,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       return false
     }
 
-    // Check if setCustomPeriod is "custom"
-    if (recurringFrequency === "Custom") {
+    // Check if custom mode is enabled
+    if (isCustomMode) {
+      const baseDate = startDate || endDate || new Date()
+      
       // If customPeriod is "week", select every weekly day
       if (customPeriod === "week") {
-        const baseDate = startDate || endDate || new Date()
         const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
         const weeksDiff = Math.floor(daysDiff / 7)
         
@@ -215,7 +228,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       
       // If customPeriod is "day", "month", "year", select based on customPeriod
       else if (["day", "month", "year"].includes(customPeriod)) {
-        const baseDate = startDate || endDate || new Date()
         const daysDiff = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24))
 
         switch (customPeriod) {
@@ -279,8 +291,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       return false
     }
 
-    // Only apply skipping logic when setCustomPeriod is "custom"
-    if (recurringFrequency === "Custom") {
+    // Only apply skipping logic when custom mode is enabled
+    if (isCustomMode) {
       if (customInterval <= 1) {
         return false
       }
@@ -827,6 +839,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   setCustomInterval={setCustomInterval}
                   customPeriod={customPeriod}
                   setCustomPeriod={setCustomPeriod}
+                  isCustomMode={isCustomMode}
+                  setIsCustomMode={setIsCustomMode}
                   selectedDays={selectedDays}
                   setSelectedDays={setSelectedDays}
                   skipWeekends={skipWeekends}
